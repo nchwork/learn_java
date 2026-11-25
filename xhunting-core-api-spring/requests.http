@@ -1,0 +1,63 @@
+### Chạy từng request trong IntelliJ IDEA (HTTP Client có sẵn) hoặc VS Code (extension "REST Client").
+### Server phải đang chạy ở http://localhost:8080 (xem README).
+
+@base = http://localhost:8080/core-api/tenants
+@hunter = Bearer hunter1-token
+@admin = Bearer admin-token
+
+### 0. Health check
+GET http://localhost:8080/actuator/health
+
+### 1. Xin upload token (cấp case id + folderPath). Copy 3 giá trị trả về vào request 2.
+POST {{base}}/tenant-a/cases/@/upload-token
+Authorization: {{hunter}}
+
+### 2. Tạo case (thay FOLDER_PATH và UPLOAD_TOKEN bằng kết quả bước 1)
+POST {{base}}/tenant-a/cases
+Authorization: {{hunter}}
+Content-Type: application/json
+
+{
+  "item": {
+    "tenantId": "tenant-a",
+    "name": "Lateral movement host-07",
+    "priority": "high",
+    "assigneeIds": ["u-hunter2"],
+    "filenames": ["host07.zip"],
+    "folderPath": "FOLDER_PATH",
+    "uploadToken": "UPLOAD_TOKEN"
+  }
+}
+
+### 3. Danh sách case (lọc, sắp xếp, phân trang)
+GET {{base}}/tenant-a/cases?status=open,in_progress&sort=-createdTime&offset=0&limit=20
+Authorization: {{hunter}}
+
+### 4. Admin xem mọi tenant
+GET {{base}}/MASTER/cases
+Authorization: {{admin}}
+
+### 5. Xem chi tiết (trả kèm uploadToken mới dùng cho Update)
+GET {{base}}/tenant-a/cases/65f000000000000000000001
+Authorization: {{hunter}}
+
+### 6. Cập nhật (UPLOAD_TOKEN lấy từ bước 5)
+PUT {{base}}/tenant-a/cases/65f000000000000000000001
+Authorization: {{hunter}}
+Content-Type: application/json
+
+{
+  "item": {
+    "tenantId": "tenant-a",
+    "name": "Ransomware host-01 (đã cập nhật)",
+    "priority": "high",
+    "assigneeIds": ["u-hunter2"],
+    "filenames": ["logs_1.zip", "logs_extra.7z"],
+    "folderPath": "/tenant-a/65f000000000000000000001",
+    "uploadToken": "UPLOAD_TOKEN"
+  }
+}
+
+### 7. Xóa (xóa mềm)
+DELETE {{base}}/tenant-a/cases/65f000000000000000000001
+Authorization: {{hunter}}

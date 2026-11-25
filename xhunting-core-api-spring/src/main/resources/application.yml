@@ -1,0 +1,27 @@
+# Cấu hình ~ file config yaml của core-api bản Go (configs.ConfigContainer + mapstructure).
+# Mọi giá trị ghi đè được bằng biến môi trường: server.port -> SERVER_PORT, xhunting.encrypt-key -> XHUNTING_ENCRYPT_KEY.
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: xhunting-core-api-spring
+  threads:
+    virtual:
+      enabled: true   # Tomcat xử lý mỗi request trên một virtual thread (Java 21), giống bản core / goroutine
+  data:
+    mongodb:
+      uri: ${MONGO_URI:mongodb://localhost:27017}
+      database: ${MONGO_DATABASE:xhunting}
+      auto-index-creation: true   # tạo index từ @Indexed / @CompoundIndex khi khởi động
+
+# Map vào record AppProperties nhờ @ConfigurationProperties(prefix = "xhunting")
+xhunting:
+  encrypt-key: ${ENCRYPT_KEY:local-dev-key-32-bytes-long!!!!!}
+  seed-demo-data: ${SEED_DEMO_DATA:true}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
